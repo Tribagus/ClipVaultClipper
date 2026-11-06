@@ -10,6 +10,7 @@ on:
 jobs:
   build:
     runs-on: ubuntu-latest
+
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -25,12 +26,16 @@ jobs:
         with:
           gradle-version: '8.9'
 
+      - name: Extract source ZIP
+        run: |
+          unzip -q ClipVault_Clipper_Android_Source.zip -d .
+
       - name: Build APK
-        run: gradle assembleDebug
+        run: gradle -p ClipVaultClipper assembleDebug
 
       - name: Upload APK
         uses: actions/upload-artifact@v4
         with:
           name: ClipVault-debug-apk
-          path: app/build/outputs/apk/debug/app-debug.apk
+          path: ClipVaultClipper/app/build/outputs/apk/debug/app-debug.apk
           if-no-files-found: error
