@@ -1,3 +1,4 @@
+
 name: Build ClipVault Clipper APK
 
 on:
@@ -24,16 +25,29 @@ jobs:
         with:
           gradle-version: '8.9'
 
-      - name: Extract source ZIP
+      - name: Find and extract source ZIP
         run: |
-          unzip -q ClipVault_Clipper_Android_Source.zip -d .
+          echo "Files in repository:"
+          ls -la
+          ZIP="$(find . -type f -iname '*.zip' -print -quit)"
+          if [ -z "$ZIP" ]; then
+            echo "ERROR: No ZIP file found in repository"
+            exit 1
+          fi
+          echo "Found source: $ZIP"
+          unzip -q "$ZIP" -d /tmp/clipvault-source
+          find /tmp/clipvault-source -maxdepth 3 -name settings.gradle.kts
 
       - name: Build APK
-        run: gradle -p ClipVaultClipper assembleDebug
+        run: |
+          PROJECT="$(find /tmp/clipvault-source -name settings.gradle.kts -print -quit | xargs dirname)"
+          echo "Project directory: $PROJECT"
+          gradle -p "$PROJECT" assembleDebug
 
       - name: Upload APK
         uses: actions/upload-artifact@v4
         with:
           name: ClipVault-debug-apk
-          path: ClipVaultClipper/app/build/outputs/apk/debug/app-debug.apk
+          path: /tmp/clipvault-source/**/app/build/outputs/apk/debug/app-debug.apk
           if-no-files-found: error
+          
